@@ -50,6 +50,13 @@ func (g greeting) Version() string {
 
 // Stop stop plugin
 func (g greeting) Stop() {
+	for _, device := range adapter.DevicesConfig.EnergySources {
+		if device.Type == "ecoflow" {
+			services.ServerMessage("Reset power of %s to %02f", device.MicroConverter, float64(adapter.DefaultConfig.BaseRequest))
+			SetEcoflowPowerConsumption(device.MicroConverter, float64(adapter.DefaultConfig.BaseRequest))
+		}
+	}
+
 }
 
 func (g greeting) GetPower(converter string) ([]float64, error) {
