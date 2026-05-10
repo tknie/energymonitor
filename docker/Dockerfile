@@ -14,12 +14,12 @@ FROM alpine:latest
 
 RUN  apk update && apk upgrade && apk add gcompat
 
-COPY ecoflow2db /ecoflow2db/bin/
+COPY energymonitor /energymonitor/bin/
 COPY docker-entrypoint.sh /
 
 RUN chmod a+x docker-entrypoint.sh && \
-   mkdir /ecoflow2db/log && chmod 777 /ecoflow2db/log
+   mkdir /energymonitor/log && chmod 777 /energymonitor/log
 
-ENV LOGFILE=/ecoflow2db/log/
+ENV LOGFILE=/energymonitor/log/
 
 CMD ["/docker-entrypoint.sh"]

@@ -9,7 +9,7 @@
 *
  */
 
-package ecoflow2db
+package energymonitor
 
 import (
 	"context"
@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/tknie/ecoflow"
 	"github.com/tknie/log"
 	"github.com/tknie/services"
 	"golang.org/x/text/message"
@@ -48,17 +47,9 @@ type Mapping []struct {
 }
 
 type Topic struct {
-	Name    string  `yaml:"name"`
-	Mapping Mapping `yaml:"mapping"`
-}
-
-// loop loop through receiving all messages from MQTT and store them into
-// the database
-func loopIncomingMessages(msgChan chan *paho.Publish, topicMap map[string]*Topic) {
-	if OutLoopSeconds == 0 {
-		return
-	}
-	go loopCounterAndCancelOutput(msgChan, topicMap)
+	Name       string  `yaml:"name"`
+	Mapping    Mapping `yaml:"mapping"`
+	pahoClient *paho.Client
 }
 
 func loopCounterAndCancelOutput(msgChan chan *paho.Publish, topicMap map[string]*Topic) {
@@ -110,32 +101,6 @@ func loopCounterAndCancelOutput(msgChan chan *paho.Publish, topicMap map[string]
 	}
 }
 
-func getMqttCurrentRequest() {
-	accessKey := os.ExpandEnv(adapter.EcoflowConfig.AccessKey)
-	secretKey := os.ExpandEnv(adapter.EcoflowConfig.SecretKey)
-	if accessKey == "" {
-		accessKey = os.ExpandEnv("${ECOFLOW_ACCESS_KEY}")
-	}
-	if secretKey == "" {
-		secretKey = os.ExpandEnv("${ECOFLOW_SECRET_KEY}")
-	}
-	log.Log.Debugf("AccessKey: %v", accessKey)
-	log.Log.Debugf("SecretKey: %v", secretKey)
-	client := ecoflow.NewClient(accessKey, secretKey)
-	ctx := context.Background()
-	converter := os.ExpandEnv(adapter.EcoflowConfig.MicroConverter[0])
-	dsn, err := client.GetDeviceInfo(ctx, converter, "")
-	if err != nil {
-		fmt.Println("Error getting device info for converter: ", converter, " error: ", err)
-		return
-	}
-	converterRequested := dsn["20_1.invToOtherWatts"].(float64) / 10
-	if converterRequested != currentRequested {
-		services.ServerMessage("Update accu energy requested: %.1f before was %.1f", converterRequested, currentRequested)
-		currentRequested = converterRequested
-	}
-}
-
 func tryConnectMQTT(server string, tries int) net.Conn {
 	var err error
 	var conn net.Conn
@@ -157,11 +122,11 @@ func tryConnectMQTT(server string, tries int) net.Conn {
 	return nil
 }
 
-func (config *adapterConfig) ConnectMQTT() {
+func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*Topic)) {
 	if config.Mqtt == nil || config.Mqtt.Server == "" {
 		return
 	}
-	getMqttCurrentRequest()
+	refreshCurrentPowerRequest()
 	if config.Mqtt.MaxTries == 0 {
 		config.Mqtt.MaxTries = DefaultMaxTries
 	}
@@ -241,6 +206,7 @@ func (config *adapterConfig) ConnectMQTT() {
 	// subscribe to a subscription MQTT topic
 	subscriptions := make([]paho.SubscribeOptions, 0)
 	for _, topic := range config.Mqtt.Topics {
+		topic.pahoClient = pahoClient
 		topicMap[topic.Name] = topic
 		subscriptions = append(subscriptions, paho.SubscribeOptions{Topic: topic.Name,
 			QoS: byte(config.Mqtt.Qos)})
@@ -257,21 +223,20 @@ func (config *adapterConfig) ConnectMQTT() {
 	if sa.Reasons[0] != byte(config.Mqtt.Qos) {
 		log.Log.Fatalf("Failed to subscribe to %v : %d", subscriptions, sa.Reasons[0])
 	}
-	go loopIncomingMessages(msgChan, topicMap)
+	go f(msgChan, topicMap)
 }
 
 func (topic *Topic) processEvent(event map[string]interface{}) {
 	log.Log.Debugf("Processing event for topic: %s, got event: %v request: %f",
 		topic.Name, event, currentRequested)
 	newRequested := currentRequested
-	converter := os.ExpandEnv(adapter.EcoflowConfig.MicroConverter[0])
 	out := event["out"].(float64)
 	power := event["power"].(float64)
 	log.Log.Debugf("Pre-Power: %f, out: %f, new requested: %f, current requested: %f, blockRequestTime: %v",
 		power, out, newRequested, currentRequested, time.Until(blockRequestTime))
 
 	if currentRequested == 0 || !adapter.DefaultConfig.RealtimeRequest {
-		getMqttCurrentRequest()
+		refreshCurrentPowerRequest()
 		return
 	}
 	log.Log.Infof("Realtime request = %v  or new requested is same as last requested %f, computed value: %f power: %f out: %f",
@@ -285,7 +250,7 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 		power, out, newRequested, currentRequested)
 
 	if power > 0 && blockRequestTime.After(time.Now()) {
-		getMqttCurrentRequest()
+		refreshCurrentPowerRequest()
 		return
 	}
 
@@ -313,13 +278,31 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 	}
 	log.Log.Infof("Power: %f, out: %f, new requested: %f, current requested: %f",
 		power, out, newRequested, currentRequested)
+	p := &paho.Publish{Topic: "energymonitor/update", Payload: []byte(fmt.Sprintf("{\"status\":{\"power\": %f, \"out\": %f, \"requested\": %f}}", power, out, newRequested))}
+	ctx := context.Background()
+	topic.pahoClient.Publish(ctx, p)
 
 	if newRequested > 0 && newRequested != float64(currentRequested) {
 		blockRequestTime = time.Now().Add(time.Duration(adapter.DefaultConfig.WaitAfterRequestSeconds) * time.Second)
 		services.ServerMessage("Realtime power request:   %0.1f in [%04d:%04d] power = %0.1f out = %0.1f",
 			newRequested, adapter.DefaultConfig.BaseRequest, adapter.DefaultConfig.UpperBatLimit,
 			power, out)
-		client.SetEnvironmentPowerConsumption(converter, newRequested)
-		getMqttCurrentRequest()
+		SetOverallPowerConsumption(newRequested)
+		refreshCurrentPowerRequest()
+	}
+}
+
+func SetOverallPowerConsumption(newRequested float64) {
+	if adapter.DefaultConfig.RealtimeRequest {
+		if newRequested < float64(adapter.DefaultConfig.BaseRequest) {
+			newRequested = float64(adapter.DefaultConfig.BaseRequest)
+		}
+		if newRequested > float64(adapter.DefaultConfig.UpperBatLimit) {
+			newRequested = float64(adapter.DefaultConfig.UpperBatLimit)
+		}
+		// TODO use different microconverter or modules to set power request
+		//converter := EcoflowMicroConverter()
+		// client.SetEnvironmentPowerConsumption(converter, newRequested)
+		services.ServerMessage("Set overall power consumption to %f", newRequested)
 	}
 }

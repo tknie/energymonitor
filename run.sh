@@ -15,6 +15,14 @@
 LOGPATH=$(pwd)/logs
 export LOGPATH
 
-rm -f ecoflow2db.log $LOGPATH/*
-#go run ./cmd/ecoflow2db 
-docker/ecoflow2db $*
+rm -f $LOGPATH/*.log
+
+MQTT_TOPIC_PASSWORD=Testtkn1+
+export MQTT_TOPIC_PASSWORD
+
+ENERGY_METER_PLUGINS=$(pwd)/bin/plugins
+export ENERGY_METER_PLUGINS
+
+rm -f energymonitor.log $LOGPATH/*
+#go run ./cmd/energymonitor 
+bin/energymonitor $*

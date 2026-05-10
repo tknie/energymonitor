@@ -1,6 +1,6 @@
-# Ecoflow2db application
+# EnergyMonitor application
 
-- [Ecoflow2db application](#ecoflow2db-application)
+- [EnergyMonitor application](#energymonitor-application)
   - [Introduction](#introduction)
   - [Environment variables](#environment-variables)
   - [Build](#build)
@@ -9,9 +9,9 @@
 
 ## Introduction
 
-This application named Ecoflow2db is used to query Ecoflow API getting current configuration and Solar data information and generate corresponding database tables in the Postgres database.
+This application named energymonitor is used to query Ecoflow API getting current configuration and Solar data information and generate corresponding database tables in the Postgres database.
 
-Ecoflow2db queries periodically data from all devices quota API calls and store the data. The data is display in Grafana as an example.
+energymonitor queries periodically data from all devices quota API calls and store the data. The data is display in Grafana as an example.
 
 Current Ecoflow devices are in use at the moment:
 
@@ -32,11 +32,11 @@ Variables | Default | Description
  ECOFLOW_DB_USER |  | Postgres user name
  ECOFLOW_DB_PASS |  | Postgres user password
  LOGPATH |  | Directory for log trace file
- ECOFLOW2DB_WAIT_SECONDS | 30 | Time in seconds waiting between a loop reading statistic data in Ecoflow API
+ energymonitor_WAIT_SECONDS | 30 | Time in seconds waiting between a loop reading statistic data in Ecoflow API
 
 ## Build
 
-The `ecoflow2db` application is written in Golang. The tool can be build with
+The `energymonitor` application is written in Golang. The tool can be build with
 
 ```sh
 build.sh
@@ -44,12 +44,12 @@ build.sh
 
 ## Docker environment
 
-The Ecoflow2db application and corresponding Postgres database is running in an Raspberry Pi.
+The energymonitor application and corresponding Postgres database is running in an Raspberry Pi.
 
 Docker images are on Docker hub at
 
 ```docker
-docker pull thknie/ecoflow2db:tagname
+docker pull thknie/energymonitor:tagname
 ```
 
 See the example script showing how to start the service with podman. Located is the script in this repostiory at [docker/podstart.sh](docker/podstart.sh).
@@ -59,7 +59,7 @@ See the example script showing how to start the service with podman. Located is 
 In Grafana accessing the data source containing the data received by two input sources
 
 - First sources comes from [mqtt2db](https://github.com/tknie/mqtt2db). This tool receives Tasmota electric meter data using an Mosquitto MQTT server and store it in database
-- Second sources comes from [ecoflow2db](https://github.com/tknie/ecoflow2db) using the Ecoflow API receiving Solar panel and inverter statistics and store it in the same database
+- Second sources comes from [energymonitor](https://github.com/tknie/energymonitor) using the Ecoflow API receiving Solar panel and inverter statistics and store it in the same database
 
 Both data are containing a wide range of statistic data which can be presented inside an Grafana Dashboard:
 

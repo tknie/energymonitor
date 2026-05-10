@@ -9,7 +9,7 @@
 *
  */
 
-package ecoflow2db
+package main
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ import (
 )
 
 // insertMqttData prepare MQTT data into column data for database storage
-func insertMqttData(data map[string]interface{}) ([]string, [][]any) {
+func insertMqttData(prefix string, data map[string]interface{}) ([]string, [][]any) {
 	keys := make([]string, 0)
 	for k := range data {
 		keys = append(keys, k)
@@ -34,11 +34,19 @@ func insertMqttData(data map[string]interface{}) ([]string, [][]any) {
 	fields := make([]string, 0)
 	for _, k := range keys {
 		v := data[k]
-		name := "eco_" + strings.ReplaceAll(k, ".", "_")
+		name := prefix + "_" + strings.ReplaceAll(k, ".", "_")
 		fields = append(fields, name)
 		log.Log.Debugf(" %s=%v %T -> %s", k, v, v, name)
 		switch val := v.(type) {
 		case string:
+			columns = append(columns, val)
+		case bool:
+			if val {
+				columns = append(columns, byte(1))
+			} else {
+				columns = append(columns, byte(0))
+			}
+		case int64:
 			columns = append(columns, val)
 		case float64:
 			if val == math.Trunc(val) {

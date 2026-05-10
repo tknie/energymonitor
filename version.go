@@ -9,7 +9,7 @@
 *
  */
 
-package ecoflow2db
+package energymonitor
 
 // BuildDate build date
 var BuildDate string

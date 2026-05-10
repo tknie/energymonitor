@@ -9,7 +9,7 @@
 *
  */
 
-package ecoflow2db
+package energymonitor
 
 import (
 	"log"
@@ -95,7 +95,7 @@ func reflectType(fdType string, i interface{}) interface{} {
 	tlog.Log.Debugf("Resolve %s destType=%v %T", fdType, i, i)
 	switch fdType {
 	case "time.Time":
-		tn, err := time.ParseInLocation(layout, i.(string), time.Local)
+		tn, err := time.ParseInLocation(Layout, i.(string), time.Local)
 		if err != nil {
 			log.Fatalf("Parse time location failed: %v", err)
 		}

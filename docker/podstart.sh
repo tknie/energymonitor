@@ -24,8 +24,8 @@ DOCKER_IMAGE=<docker image>
 PWD=`pwd`
 
 podman pod create \
-   --name ecoflow2db_pod
-podman run --name ecoflow2db --pod ecoflow2db_pod \
+   --name energymonitor_pod
+podman run --name energymonitor --pod energymonitor_pod \
         -e TZ="Europe/Berlin" \
         --restart=on-failure:10 \
         -e ECOFLOW_USER=${ECOFLOW_USER} \
@@ -36,6 +36,6 @@ podman run --name ecoflow2db --pod ecoflow2db_pod \
         -e ECOFLOW_DB_URL=${ECOFLOW_DB_URL} \
         -e ECOFLOW_DB_USER=${POSTGRES_USER} \
         -e ECOFLOW_DB_PASS=${POSTGRES_PASSWORD} \
-        -e LOGPATH=/ecoflow2db/log \
-        -v $PWD/ecoflow2db/log:/ecoflow2db/log:rw \
+        -e LOGPATH=/energymonitor/log \
+        -v $PWD/energymonitor/log:/energymonitor/log:rw \
         -d ${DOCKER_IMAGE}

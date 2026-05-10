@@ -12,7 +12,7 @@
 #       http://www.apache.org/licenses/LICENSE-2.0
 #
 
-LOGFILE=/ecoflow2db/log/
+LOGFILE=/energymonitor/log/
 export LOGFILE
 
 # default log level set to info
@@ -31,7 +31,7 @@ function clean_up {
 
 trap clean_up EXIT HUP INT TERM SIGHUP SIGINT SIGTERM QUIT
 
-/ecoflow2db/bin/ecoflow2db
+/energymonitor/bin/energymonitor
 EXITCODE=$?
 
 exit ${EXITCODE}

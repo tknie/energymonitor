@@ -1,8 +1,9 @@
+bin/
 logs/
 adapter.yaml
 mqtt
 *.log
 .DS_Store
-docker/ecoflow2db
+docker/energymonitor
 testenv.sh
 .vscode/

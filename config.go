@@ -9,7 +9,7 @@
 *
  */
 
-package ecoflow2db
+package energymonitor
 
 import (
 	"bytes"
@@ -22,11 +22,12 @@ import (
 	"github.com/tknie/services"
 )
 
-type adapterConfig struct {
-	DefaultConfig  *defaultConfig  `yaml:"default"`
-	DatabaseConfig *databaseConfig `yaml:"database"`
-	Mqtt           *mqttConfig     `yaml:"mqtt"`
-	EcoflowConfig  *ecoflowConfig  `yaml:"ecoflow"`
+type AdapterConfig struct {
+	DefaultConfig  *defaultConfig    `yaml:"default"`
+	DatabaseConfig *databaseConfig   `yaml:"database"`
+	Mqtt           *mqttConfig       `yaml:"mqtt"`
+	EcoflowConfig  *componentsConfig `yaml:"ecoflow"`
+	DevicesConfig  *devicesConfig    `yaml:"devices"`
 }
 
 type defaultConfig struct {
@@ -51,33 +52,50 @@ type mqttConfig struct {
 }
 
 type databaseConfig struct {
-	Target      string `yaml:"target"`
-	TableName   string `yaml:"tableName"`
-	Table       string `yaml:"ecoflowTable"`
-	EnergyTable string `yaml:"energyTable"`
+	Target string `yaml:"target"`
 }
 
-type ecoflowConfig struct {
-	CheckBatteryLimits      bool     `yaml:"checkBatteryLimits"`
-	CheckBatteryLimitsTests bool     `yaml:"checkBatteryLimitsTests"`
-	User                    string   `yaml:"user"`
-	Password                string   `yaml:"password"`
-	AccessKey               string   `yaml:"accessKey"`
-	SecretKey               string   `yaml:"secretKey"`
-	MicroConverter          []string `yaml:"microConverter"`
-	Battery                 []string `yaml:"battery"`
+type sourceConfig struct {
+	MicroConverter string   `yaml:"microConverter"`
+	Battery        string   `yaml:"battery"`
+	Type           string   `yaml:"type"`
+	Tables         []string `yaml:"tables"`
+	User           string   `yaml:"user"`
+	Password       string   `yaml:"password"`
+	AccessKey      string   `yaml:"accessKey"`
+	SecretKey      string   `yaml:"secretKey"`
+}
+
+type componentsConfig struct {
+	User      string `yaml:"user"`
+	Password  string `yaml:"password"`
+	AccessKey string `yaml:"accessKey"`
+	SecretKey string `yaml:"secretKey"`
+}
+
+type devicesConfig struct {
+	CheckBatteryLimits      bool            `yaml:"checkBatteryLimits"`
+	CheckBatteryLimitsTests bool            `yaml:"checkBatteryLimitsTests"`
+	EnergySources           []*sourceConfig `yaml:"energySources"`
 }
 
 const defaultBaseRequest = 100
 const defaultMaxRequest = 250
 
-var adapter = &adapterConfig{
+var adapter = &AdapterConfig{
 	DefaultConfig:  &defaultConfig{BaseRequest: defaultBaseRequest},
 	DatabaseConfig: &databaseConfig{},
-	EcoflowConfig:  &ecoflowConfig{},
+	EcoflowConfig:  &componentsConfig{},
+	DevicesConfig:  &devicesConfig{},
 }
 
-var FlowLoopSeconds = DefaultSeconds
+const Layout = "2006-01-02 15:04:05.000"
+const shortLayout = "2006-01-02 15:04"
+const DefaultSeconds = 60
+
+var Test = false
+var LoopSeconds = DefaultSeconds
+var MqttDisable = false
 
 // ReadConfig read config file
 func readConfig(file string) ([]byte, error) {
@@ -123,12 +141,6 @@ func evaluateConfig(file string) {
 		if adapter.DefaultConfig.UpperBatLimit == 0 {
 			adapter.DefaultConfig.UpperBatLimit = defaultMaxRequest
 		}
-	}
-	if adapter.DatabaseConfig.TableName == "" {
-		adapter.DatabaseConfig.TableName = os.Getenv("ECOFLOW_DB_TABLENAME")
-	}
-	if adapter.DatabaseConfig.Table == "" {
-		adapter.DatabaseConfig.Table = os.Getenv("ECOFLOW_DB_TABLENAME")
 	}
 	switch {
 	case adapter.DefaultConfig.DynamicRequest && adapter.DefaultConfig.RealtimeRequest:

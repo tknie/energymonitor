@@ -1,5 +1,5 @@
 /*
-* Copyright 2025-2026 Thorsten A. Knieling
+* Copyright 2023-2025 Thorsten A. Knieling
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -9,7 +9,7 @@
 *
  */
 
-package ecoflow2db
+package energymonitor
 
 import (
 	"bytes"
@@ -21,13 +21,12 @@ import (
 	"github.com/tknie/services"
 )
 
-var StatLoopMinutes = time.Duration(5)
-
 type statDatabase struct {
 	counter uint64
 }
 
 var mapStatDatabase = make(map[string]*statDatabase)
+var StatLoopMinutes = time.Duration(5)
 
 func getDbStatEntry(tn string) *statDatabase {
 	if s, ok := mapStatDatabase[tn]; ok {
