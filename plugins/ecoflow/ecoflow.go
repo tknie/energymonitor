@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eclipse/paho.golang/paho"
 	"github.com/tknie/ecoflow"
 	"github.com/tknie/energymonitor"
 	"github.com/tknie/log"
@@ -90,7 +89,7 @@ func InitEcoflow() {
 	if prepareEcoflow() == nil {
 		return
 	}
-	adapter.ConnectMQTT(func(c chan *paho.Publish, m map[string]*energymonitor.Topic) {})
+	adapter.ConnectMQTT(energymonitor.LoopCounterAndCancelOutput)
 	user := adapter.EcoflowConfig.User
 	password := adapter.EcoflowConfig.Password
 	// Start statistics output
@@ -120,7 +119,7 @@ func prepareEcoflow() *ecoflow.Client {
 	return client
 }
 
-func ecoflowCurrentPowerRequest() float64 {
+func ecoflowCurrentPowerRequest(converter string) []float64 {
 	accessKey := os.ExpandEnv(adapter.EcoflowConfig.AccessKey)
 	secretKey := os.ExpandEnv(adapter.EcoflowConfig.SecretKey)
 	if accessKey == "" {
@@ -133,18 +132,18 @@ func ecoflowCurrentPowerRequest() float64 {
 	log.Log.Debugf("SecretKey: %v", secretKey)
 	client := ecoflow.NewClient(accessKey, secretKey)
 	ctx := context.Background()
-	converter := EcoflowMicroConverter()
 	dsn, err := client.GetDeviceInfo(ctx, converter, "")
 	if err != nil {
 		fmt.Println("Error getting device info for converter: ", converter, " error: ", err)
-		return -1
+		return []float64{0, 0}
 	}
-	converterRequested := dsn["20_1.invToOtherWatts"].(float64) / 10
+	converterRequested := dsn["20_1.invDemandWatts"].(float64) / 10
+	energyProviding := dsn["20_1.invToOtherWatts"].(float64) / 10
 	if converterRequested != currentRequested {
 		services.ServerMessage("Update accu energy requested: %.1f before was %.1f", converterRequested, currentRequested)
 		currentRequested = converterRequested
 	}
-	return currentRequested
+	return []float64{currentRequested, energyProviding}
 }
 
 func EcoflowMicroConverter() string {
@@ -156,7 +155,8 @@ func EcoflowMicroConverter() string {
 	return ""
 }
 
-func SetEcoflowPowerConsumption(microConverter string, value float64) {
-	prepareEcoflow()
+func SetEcoflowPowerConsumption(microConverter string, value float64) (float64, error) {
+	client := prepareEcoflow()
 	client.SetEnvironmentPowerConsumption(microConverter, value)
+	return value, nil
 }

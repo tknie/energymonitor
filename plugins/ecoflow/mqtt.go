@@ -22,7 +22,7 @@ import (
 var mqttid common.RegDbID
 var client *ecoflow.Client
 
-// InitMqtt initialize MQTT listener
+// InitMqtt initialize Ecoflow MQTT listener
 func InitMqtt(user, password string) {
 	mqttid = energymonitor.ConnnectDatabase()
 	services.ServerMessage("Connecting MQTT client")

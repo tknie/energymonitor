@@ -287,6 +287,8 @@ func collectKeys(data map[string]interface{}, prefix string) ([]string, []any) {
 				subf, subv := collectKeys(val, prefix+"_"+strings.ReplaceAll(strings.ToLower(k), ".", "_"))
 				fields = append(fields, subf...)
 				columns = append(columns, subv...)
+			case []interface{}:
+				columns = append(columns, fmt.Sprintf("%v", val))
 			default:
 				services.ServerMessage("Unknown HTTP JSON type %s=%T -> %v", k, v, v)
 				log.Log.Errorf("Unknown type %s=%T", k, v)

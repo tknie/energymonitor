@@ -56,8 +56,9 @@ type Loader interface {
 	Version() string
 	Register(config *AdapterConfig)
 	Info() *PluginInfo
-	GetPower(converter string) (float64, error)
-	SetPower(converter string, power float64) error
+	GetPower(converter string) ([]float64, error)
+	SetPower(converter string, power float64) (float64, error)
+	Converter() []string
 	Stop()
 }
 
@@ -156,6 +157,7 @@ func load(loader Loader, info os.FileInfo, plug *plugin.Plugin) {
 	pi := loader.Info()
 	services.ServerMessage("Loading plugin: %s, version: %s, type: %s", pi.Name, pi.Version, pi.Identifier[0])
 	loader.Register(adapter)
+	plugins[pi.Identifier[0]] = &PluginLoader{Loader: loader}
 }
 
 // ShutdownPlugins shutdown receiving message in plugins

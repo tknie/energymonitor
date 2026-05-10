@@ -50,13 +50,23 @@ func (g greeting) Version() string {
 	return "1.0"
 }
 
-func (g greeting) GetPower(converter string) (float64, error) {
-	return 0, fmt.Errorf("Not implemented yet")
+func (g greeting) GetPower(converter string) ([]float64, error) {
+	return []float64{0, 0}, fmt.Errorf("Not implemented yet")
+}
+
+func (g greeting) Converter() []string {
+	converters := make([]string, 0)
+	for _, device := range adapter.DevicesConfig.EnergySources {
+		if device.Type == "marstek" {
+			converters = append(converters, device.MicroConverter)
+		}
+	}
+	return converters
 }
 
 // SetPower set power to device
-func (g greeting) SetPower(converter string, power float64) error {
-	return nil
+func (g greeting) SetPower(converter string, power float64) (float64, error) {
+	return 0, nil
 }
 
 // Stop stop plugin

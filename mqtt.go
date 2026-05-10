@@ -38,6 +38,7 @@ var CloseIfStuck = false
 
 var blockRequestTime time.Time = time.Now().Add(time.Duration(10) * time.Second)
 var currentRequested float64 = 0
+var currentDelivered float64 = 0
 
 type Mapping []struct {
 	Source      string `yaml:"source"`
@@ -52,7 +53,7 @@ type Topic struct {
 	pahoClient *paho.Client
 }
 
-func loopCounterAndCancelOutput(msgChan chan *paho.Publish, topicMap map[string]*Topic) {
+func LoopCounterAndCancelOutput(msgChan chan *paho.Publish, topicMap map[string]*Topic) {
 	lastCounter := uint64(0)
 	lastTime := time.Now()
 	try := 0
@@ -124,6 +125,7 @@ func tryConnectMQTT(server string, tries int) net.Conn {
 
 func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*Topic)) {
 	if config.Mqtt == nil || config.Mqtt.Server == "" {
+		services.ServerMessage("No definition or MQTT server set")
 		return
 	}
 	refreshCurrentPowerRequest()
@@ -250,6 +252,7 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 		power, out, newRequested, currentRequested)
 
 	if power > 0 && blockRequestTime.After(time.Now()) {
+		log.Log.Debugf("Blocked until time shift or power 0")
 		refreshCurrentPowerRequest()
 		return
 	}
@@ -260,7 +263,7 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 		log.Log.Debugf("OUT found new requested: %f, current requested: %f",
 			newRequested, currentRequested)
 	case power > float64(adapter.DefaultConfig.IntermediateSize):
-		newRequested = float64(currentRequested) + power - float64(adapter.DefaultConfig.IntermediateSize)
+		newRequested = float64(currentDelivered) + power - float64(adapter.DefaultConfig.IntermediateSize)
 		log.Log.Debugf("IN  found new requested: %f, current requested: %f, power: %f",
 			newRequested, currentRequested, power)
 
@@ -289,20 +292,5 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 			power, out)
 		SetOverallPowerConsumption(newRequested)
 		refreshCurrentPowerRequest()
-	}
-}
-
-func SetOverallPowerConsumption(newRequested float64) {
-	if adapter.DefaultConfig.RealtimeRequest {
-		if newRequested < float64(adapter.DefaultConfig.BaseRequest) {
-			newRequested = float64(adapter.DefaultConfig.BaseRequest)
-		}
-		if newRequested > float64(adapter.DefaultConfig.UpperBatLimit) {
-			newRequested = float64(adapter.DefaultConfig.UpperBatLimit)
-		}
-		// TODO use different microconverter or modules to set power request
-		//converter := EcoflowMicroConverter()
-		// client.SetEnvironmentPowerConsumption(converter, newRequested)
-		services.ServerMessage("Set overall power consumption to %f", newRequested)
 	}
 }

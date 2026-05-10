@@ -48,7 +48,7 @@ func httpParameterStore() {
 	services.ServerMessage("Go through %d devices to get parameters and store to %s", len(devices.Devices), table)
 	for _, l := range devices.Devices {
 		// get all parameters for device
-		services.ServerMessage("Get Parameter for : %s", l.SN)
+		// services.ServerMessage("Get Parameter for : %s", l.SN)
 		resp, err := client.GetDeviceAllParameters(context.Background(), l.SN)
 		if err != nil {
 			services.ServerMessage("Error getting device parameter sn=%s: %v", l.SN, err)
@@ -105,7 +105,7 @@ func httpParameterStore() {
 					log.Log.Errorf("Error getting device list %s: %v", l.SN, err)
 					services.ServerMessage("Error getting device list %s: %v", l.SN, err)
 				} else {
-					services.ServerMessage("Get Parameter for : %s", l.SN)
+					//services.ServerMessage("Get Parameter for : %s", l.SN)
 					if _, ok := resp["serial_number"]; !ok {
 						resp["serial_number"] = l.SN
 					}

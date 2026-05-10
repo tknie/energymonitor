@@ -52,13 +52,35 @@ func (g greeting) Version() string {
 func (g greeting) Stop() {
 }
 
-func (g greeting) GetPower(converter string) (float64, error) {
-	return ecoflowCurrentPowerRequest(), nil
+func (g greeting) GetPower(converter string) ([]float64, error) {
+	if converter == "" {
+		return []float64{0, 0}, nil
+	}
+	return ecoflowCurrentPowerRequest(converter), nil
 }
 
 // SetPower set power to device
-func (g greeting) SetPower(converter string, power float64) error {
-	return nil
+func (g greeting) SetPower(converter string, power float64) (float64, error) {
+	if converter == "" {
+		return 0, nil
+	}
+	for _, device := range adapter.DevicesConfig.EnergySources {
+		if device.Type == "ecoflow" {
+			services.ServerMessage("Set power of %s to %02f", converter, power)
+			return SetEcoflowPowerConsumption(converter, power)
+		}
+	}
+	return 0, nil
+}
+
+func (g greeting) Converter() []string {
+	converters := make([]string, 0)
+	for _, device := range adapter.DevicesConfig.EnergySources {
+		if device.Type == "ecoflow" {
+			converters = append(converters, device.MicroConverter)
+		}
+	}
+	return converters
 }
 
 func (g greeting) Register(config *energymonitor.AdapterConfig) {
