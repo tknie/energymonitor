@@ -158,5 +158,9 @@ func EcoflowMicroConverter() string {
 func SetEcoflowPowerConsumption(microConverter string, value float64) (float64, error) {
 	client := prepareEcoflow()
 	client.SetEnvironmentPowerConsumption(microConverter, value)
+
+	message := fmt.Sprintf(`{"converter":"%s","current": %0.1f, "request": %0.1f}`, microConverter, currentRequested, value)
+	energymonitor.SendMqttMessage("energymonitor/requests", message)
+
 	return value, nil
 }

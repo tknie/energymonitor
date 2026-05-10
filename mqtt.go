@@ -53,6 +53,8 @@ type Topic struct {
 	pahoClient *paho.Client
 }
 
+var pahoClient *paho.Client
+
 func LoopCounterAndCancelOutput(msgChan chan *paho.Publish, topicMap map[string]*Topic) {
 	lastCounter := uint64(0)
 	lastTime := time.Now()
@@ -142,7 +144,7 @@ func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*
 	services.ServerMessage("Connect TCP/IP to %s", config.Mqtt.Server)
 	conn := tryConnectMQTT(config.Mqtt.Server, config.Mqtt.MaxTries)
 
-	pahoClient := paho.NewClient(paho.ClientConfig{PacketTimeout: 2 * time.Minute,
+	pahoClient = paho.NewClient(paho.ClientConfig{PacketTimeout: 2 * time.Minute,
 		Router: paho.NewStandardRouterWithDefault(func(m *paho.Publish) {
 			msgChan <- m
 		}),
@@ -225,6 +227,7 @@ func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*
 	if sa.Reasons[0] != byte(config.Mqtt.Qos) {
 		log.Log.Fatalf("Failed to subscribe to %v : %d", subscriptions, sa.Reasons[0])
 	}
+
 	go f(msgChan, topicMap)
 }
 
@@ -292,5 +295,15 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 			power, out)
 		SetOverallPowerConsumption(newRequested)
 		refreshCurrentPowerRequest()
+	}
+}
+
+func SendMqttMessage(topic, message string) {
+	p := &paho.Publish{Topic: topic, QoS: 0, Payload: []byte(message)}
+	token, err := pahoClient.Publish(context.Background(), p)
+	if err != nil {
+		log.Log.Errorf("Error sending message: %v", err)
+	} else {
+		log.Log.Infof("Send MQTT Response: %v", token.ReasonCode)
 	}
 }
