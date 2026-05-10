@@ -1,0 +1,48 @@
+default:
+  dynamicRequest: false
+  realtimeRequest: true
+  waitAfterRequestSeconds: 30
+  baseWatt: 80
+  lowerBatLimit: 15
+  upperBatLimit: 350
+  intermediateSize: 20
+  debug: info
+mqtt:
+  server: ${MQTT_URL}
+  username: ${MQTT_USER}
+  password: ${MQTT_PASSWORD}
+  loopIntervalSeconds: 300
+  topics:
+  - name: ${MQTT_TOPIC}
+    mapping:
+      - source: Strom/power
+        destination: power
+        type: float64
+      - source: Strom/out
+        destination: out
+        type: float64
+database:
+  target: ${DATABASE_URL}
+  tableName: ecoflow
+  ecoflowTable: device_quota
+  energyTable: home
+devices:
+  checkBatteryLimits: true
+  checkBatteryLimitsTests: false
+  energySources:
+    - type: ecoflow
+      microConverter: ${ECOFLOW_MICROCONVERTER}
+      battery: ${ECOFLOW_BATTERY}
+      tables:
+      - ecoflow
+      - device_quota
+      - home
+      user: ${ECOFLOW_USER}
+      password: ${ECOFLOW_PASSWORD}
+      accessKey: ${ECOFLOW_ACCESS_KEY}
+      secretKey: ${ECOFLOW_SECRET_KEY}
+ecoflow:
+  user: ${ECOFLOW_USER}
+  password: ${ECOFLOW_PASSWORD}
+  accessKey: ${ECOFLOW_ACCESS_KEY}
+  secretKey: ${ECOFLOW_SECRET_KEY}

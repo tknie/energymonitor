@@ -30,7 +30,7 @@ func init() {
 func main() {
 	create := false
 	energymonitor.LoopSeconds = energymonitor.DefaultSeconds
-	seconds := os.Getenv("energymonitor_WAIT_SECONDS")
+	seconds := os.Getenv("ENERGYMONITOR_WAIT_SECONDS")
 	if seconds != "" {
 		sec, err := strconv.Atoi(seconds)
 		if err != nil {
@@ -67,7 +67,7 @@ func main() {
 	energymonitor.StatLoopMinutes = time.Duration(statSecs)
 
 	if flowControlFile == "" {
-		flowControlFile = os.Getenv("energymonitor_CONFIG")
+		flowControlFile = os.Getenv("ENERGYMONITOR_CONFIG")
 	}
 
 	if flowControlFile != "" {

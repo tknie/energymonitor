@@ -1,4 +1,5 @@
 bin/
+test/
 logs/
 adapter.yaml
 mqtt
@@ -7,3 +8,5 @@ mqtt
 docker/energymonitor
 testenv.sh
 .vscode/
+adapter-all.yaml
+adapter-mastek.yaml

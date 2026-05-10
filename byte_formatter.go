@@ -156,7 +156,7 @@ func FormatBytes(header string, b []byte, bufferLength int, modSpace int, max in
 	buffer.WriteString(header)
 
 	formatLength := bufferLength
-	if os.Getenv("ADABAS_DUMP_BIG") == "" && formatLength > maximumFormatLength {
+	if os.Getenv("FORMAT_DUMP_BIG") == "" && formatLength > maximumFormatLength {
 		formatLength = maximumFormatLength
 	}
 
