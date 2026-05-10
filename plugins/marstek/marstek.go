@@ -24,7 +24,6 @@ func InitMastek() {
 
 // deviceValueStore main thread reading Marstek parameters and store it into database
 func deviceValueStore() {
-	services.ServerMessage("Init Marstek plugin data store")
 
 	clients := make([]struct {
 		table     string
@@ -89,9 +88,10 @@ func deviceValueStore() {
 	}
 
 	if len(clients) == 0 {
-		services.ServerMessage("No Marstek devices defined or error connecting, check configuration")
+		services.ServerMessage("No Marstek devices defined")
 		return
 	}
+	services.ServerMessage("Init Marstek plugin data store")
 
 	// Loop reading and writing data into table
 	counter := uint64(0)

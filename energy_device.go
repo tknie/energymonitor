@@ -1,7 +1,7 @@
 package energymonitor
 
-import "fmt"
+import "github.com/tknie/services"
 
 func refreshCurrentPowerRequest() {
-	fmt.Println("Refresh current power request")
+	services.ServerMessage("Refresh current power request")
 }

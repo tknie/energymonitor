@@ -226,8 +226,7 @@ func AddTableColumns(id common.RegDbID, tn, prefix string, data map[string]inter
 	for i, k := range fields {
 		name := strings.ReplaceAll(strings.ToLower(k), ".", "_")
 		if !slices.Contains(col, name) {
-			fmt.Println("Add column " + k + " -> " + name)
-			log.Log.Debugf("Column not in table %s", name)
+			log.Log.Debugf("Column not in table %s=%s", k, name)
 			c := CreateValueColumn(name, value[i])
 			columns = append(columns, c)
 		}
@@ -289,7 +288,7 @@ func collectKeys(data map[string]interface{}, prefix string) ([]string, []any) {
 				fields = append(fields, subf...)
 				columns = append(columns, subv...)
 			default:
-				services.ServerMessage("Unknown HTTP JSON type %s=%T", k, v)
+				services.ServerMessage("Unknown HTTP JSON type %s=%T -> %v", k, v, v)
 				log.Log.Errorf("Unknown type %s=%T", k, v)
 			}
 		}
