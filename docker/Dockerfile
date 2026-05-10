@@ -15,11 +15,13 @@ FROM alpine:latest
 RUN  apk update && apk upgrade && apk add gcompat
 
 COPY energymonitor /energymonitor/bin/
+COPY plugins/ecoflow.so plugins/marstek.so /energymonitor/plugins/
 COPY docker-entrypoint.sh /
 
 RUN chmod a+x docker-entrypoint.sh && \
    mkdir /energymonitor/log && chmod 777 /energymonitor/log
 
 ENV LOGFILE=/energymonitor/log/
+ENV ENERGY_METER_PLUGINS=/energymonitor/plugins/
 
 CMD ["/docker-entrypoint.sh"]
