@@ -265,16 +265,16 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 	switch {
 	case out > 0:
 		newRequested = float64(currentRequested) - out
-		log.Log.Debugf("OUT found new requested: %f, current requested: %f",
+		log.Log.Infof("OUT found new requested: %f, current requested: %f",
 			newRequested, currentRequested)
 	case power > float64(adapter.DefaultConfig.IntermediateSize):
 		newRequested = float64(currentDelivered) + power - float64(adapter.DefaultConfig.IntermediateSize)
-		log.Log.Debugf("IN  found new requested: %f, current requested: %f, power: %f",
-			newRequested, currentRequested, power)
+		log.Log.Infof("IN  found new requested: %f, current requested: %f, current delivered: %f,  power: %f",
+			newRequested, currentRequested, currentDelivered, power)
 
 	default:
-		log.Log.Debugf("Range %d, new requested: %f, current requested: %f, power: %f",
-			adapter.DefaultConfig.IntermediateSize, newRequested, currentRequested, power)
+		log.Log.Infof("Range %d, new requested: %f, current requested: %f, current delivered: %f, power: %f",
+			adapter.DefaultConfig.IntermediateSize, newRequested, currentRequested, currentDelivered, power)
 	}
 	if newRequested > float64(adapter.DefaultConfig.UpperBatLimit) {
 		newRequested = float64(adapter.DefaultConfig.UpperBatLimit)
@@ -284,8 +284,8 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 	if newRequested < float64(adapter.DefaultConfig.BaseRequest) {
 		newRequested = float64(adapter.DefaultConfig.BaseRequest)
 	}
-	log.Log.Infof("Power: %f, out: %f, new requested: %f, current requested: %f",
-		power, out, newRequested, currentRequested)
+	log.Log.Infof("Power: %f, out: %f, new requested: %f, current requested: %f, current requested: %f",
+		power, out, newRequested, currentRequested, currentDelivered)
 	p := &paho.Publish{Topic: "energymonitor/update", Payload: []byte(fmt.Sprintf("{\"status\":{\"power\": %f, \"out\": %f, \"requested\": %f}}", power, out, newRequested))}
 	ctx := context.Background()
 	topic.pahoClient.Publish(ctx, p)
