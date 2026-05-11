@@ -18,7 +18,6 @@ import (
 
 	"github.com/tknie/ecoflow"
 	"github.com/tknie/log"
-	"github.com/tknie/services"
 )
 
 type statDatabase struct {
@@ -53,7 +52,7 @@ func startStatLoop() {
 				log.Log.Infof(buffer.String())
 			case <-quit:
 				ticker.Stop()
-				services.ServerMessage("Statistics are stopped")
+				log.Log.Debugf("Statistics are stopped")
 				return
 			}
 		}

@@ -93,14 +93,12 @@ func InitEcoflow() {
 	user := adapter.EcoflowConfig.User
 	password := adapter.EcoflowConfig.Password
 	// Start statistics output
-	go httpParameterStore()
+	go readEcoflowAndStoreDB()
 
-	//done := make(chan bool, 1)
 	if !energymonitor.MqttDisable {
 		InitMqtt(user, password)
 	}
 	services.ServerMessage("Ecoflow plugin initialized")
-	//<-done
 }
 
 func prepareEcoflow() *ecoflow.Client {

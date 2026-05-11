@@ -18,6 +18,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 	"time"
 
@@ -155,11 +156,12 @@ func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*
 		},
 		OnClientError: func(err error) {
 			services.ServerMessage("MQTT client error: %v", err)
+			debug.PrintStack()
 		},
 	})
 	pahoClient.SetDebugLogger(logger)
 	pahoClient.SetErrorLogger(logger)
-	services.ServerMessage("Connecting paho services to %s", config.Mqtt.Server)
+	services.ServerMessage("Connecting MQTT paho services to %s", config.Mqtt.Server)
 	password := os.ExpandEnv(config.Mqtt.Password)
 
 	// connect to MQTT and listen and subscribe

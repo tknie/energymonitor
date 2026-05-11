@@ -16,7 +16,6 @@ import (
 	"github.com/tknie/energymonitor"
 	"github.com/tknie/flynn/common"
 	"github.com/tknie/log"
-	"github.com/tknie/services"
 )
 
 var mqttid common.RegDbID
@@ -25,7 +24,6 @@ var client *ecoflow.Client
 // InitMqtt initialize Ecoflow MQTT listener
 func InitMqtt(user, password string) {
 	mqttid = energymonitor.ConnnectDatabase()
-	services.ServerMessage("Connecting MQTT client")
 	ecoflow.InitMqtt(user, password)
 	log.Log.Debugf("Wait for Ecoflow disconnect")
 }

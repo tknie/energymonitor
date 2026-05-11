@@ -54,6 +54,6 @@ func InitDevices() {
 	services.ServerMessage("Devices up and running, waiting...")
 
 	<-done
-	services.ServerMessage("Shutting down plugins")
+	log.Log.Debugf("Shutting down plugins")
 	ShutdownPlugins()
 }

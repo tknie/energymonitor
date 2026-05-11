@@ -98,7 +98,6 @@ func (g greeting) Register(config *energymonitor.AdapterConfig) {
 		}
 	}
 	InitEcoflow()
-	services.ServerMessage("Ecoflow devices registered")
 }
 
 // exported

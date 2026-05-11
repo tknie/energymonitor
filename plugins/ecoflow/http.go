@@ -25,10 +25,10 @@ import (
 	"github.com/tknie/services"
 )
 
-// httpParameterStore main thread reading information with HTTP request
+// readEcoflowAndStoreDB main thread reading information with HTTP request
 // and store them in the database
-func httpParameterStore() {
-	services.ServerMessage("Init HTTP Ecoflow parameter store")
+func readEcoflowAndStoreDB() {
+	services.ServerMessage("Init HTTP Ecoflow parameter store to database loop")
 	client = prepareEcoflow()
 	if client == nil {
 		services.ServerMessage("Ecoflow client is not initialized, cannot start HTTP parameter store")
@@ -80,6 +80,11 @@ func httpParameterStore() {
 			return columns
 		})
 	}
+
+	loopEcoflowStoreToDb(id, devices, table)
+}
+
+func loopEcoflowStoreToDb(id common.RegDbID, devices *ecoflow.DeviceListResponse, table string) {
 
 	// Loop reading and writing data into table
 	counter := uint64(0)
