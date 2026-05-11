@@ -64,12 +64,12 @@ github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/tknie/adabas-go-api v1.7.12 h1:ZggANtYozNaRXkr+93ah9izylLBFiX51Kn5VqhvqNNc=
 github.com/tknie/adabas-go-api v1.7.12/go.mod h1:BXTeSN6NNYptF3MkelAg8opTB3AGDLbzipFR1pzgfvU=
-github.com/tknie/ecoflow v0.0.0-20260503202007-af5405797d8f h1:a9dnLc4WtQsITG7A3oi5bMTOmPZ2J4I4D3Q8HFWQ768=
-github.com/tknie/ecoflow v0.0.0-20260503202007-af5405797d8f/go.mod h1:/S/2QVDqhoMN54zP2m2VJq1v18aZePhKgvLqq5f8QOY=
+github.com/tknie/ecoflow v0.0.0-20260511201737-40dced0f8c6e h1:cNLa/l94GAnytGG8I23FTOLHPGB5p5r3kYNnng0B87c=
+github.com/tknie/ecoflow v0.0.0-20260511201737-40dced0f8c6e/go.mod h1:R+/F5buqM04bLtSllpTo/sTKe90tWjMwGRNDGWYowws=
 github.com/tknie/errorrepo v0.1.0 h1:pOt79EWL4P4UjPzXknNcdAr01fjgF38XY1u1ZzHttqo=
 github.com/tknie/errorrepo v0.1.0/go.mod h1:K4bEhPce5B7ybIptX2D2mpRfjWehStjeUG1fiegwoq0=
-github.com/tknie/flynn v0.10.0 h1:cz3GM2w6x+vkZtC3wiafcjOgz+m8HdXO48d2pc1bMYw=
-github.com/tknie/flynn v0.10.0/go.mod h1:WO1iEnbO3uD7NTKjHJjlN1G+f8icqWzCZOdqkikcACk=
+github.com/tknie/flynn v0.10.1 h1:nx7iY7nbl1htF/OxFesQko8fn/rfJdChiJUbfekUrhY=
+github.com/tknie/flynn v0.10.1/go.mod h1:sI7OCLIken0H4Pv78ygTaYnNuRIVeOS11Ov4MmrLyiI=
 github.com/tknie/log v0.4.0 h1:dDk1F1raRK8k1eMOjt8X23oGLsbYGMMpIiicbIhyAUc=
 github.com/tknie/log v0.4.0/go.mod h1:UKCtV8Q9CdW6x/B9iJwxdMoefZ7NcrPfMSVNmSbj0z0=
 github.com/tknie/marstek v0.0.0-20260505115551-99a45f0c4bc9 h1:igv9VTA4oj2mDm4+2GR4tnPQRpf75IybCwUlsS6RHs4=

@@ -5,8 +5,8 @@ go 1.25.0
 require (
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/stretchr/testify v1.11.1
-	github.com/tknie/ecoflow v0.0.0-20260503202007-af5405797d8f
-	github.com/tknie/flynn v0.10.0
+	github.com/tknie/ecoflow v0.0.0-20260511201737-40dced0f8c6e
+	github.com/tknie/flynn v0.10.1
 	github.com/tknie/log v0.4.0
 	golang.org/x/text v0.37.0
 )
