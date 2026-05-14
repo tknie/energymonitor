@@ -17,9 +17,7 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"os/signal"
 	"runtime/debug"
-	"syscall"
 	"time"
 
 	"github.com/eclipse/paho.golang/paho"
@@ -196,18 +194,6 @@ func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*
 
 	services.ServerMessage("Connecting MQTT to %s", config.Mqtt.Server)
 
-	ic := make(chan os.Signal, 1)
-	signal.Notify(ic, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-ic
-		fmt.Println("signal received, exiting")
-		if config != nil {
-			d := &paho.Disconnect{ReasonCode: 0}
-			pahoClient.Disconnect(d)
-		}
-		os.Exit(0)
-	}()
-
 	topicMap := make(map[string]*Topic)
 	// subscribe to a subscription MQTT topic
 	subscriptions := make([]paho.SubscribeOptions, 0)
@@ -231,6 +217,13 @@ func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*
 	}
 
 	go f(msgChan, topicMap)
+}
+
+func (config *AdapterConfig) Close() {
+	if config != nil {
+		d := &paho.Disconnect{ReasonCode: 0}
+		pahoClient.Disconnect(d)
+	}
 }
 
 func (topic *Topic) processEvent(event map[string]interface{}) {

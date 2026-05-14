@@ -14,12 +14,10 @@ package energymonitor
 import (
 	"fmt"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"plugin"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/tknie/log"
 	"github.com/tknie/services"
@@ -73,22 +71,7 @@ type PluginLoader struct {
 	Executor Executor
 }
 
-var interrupt chan os.Signal
-var once = new(sync.Once)
 var shutOnce = new(sync.Once)
-
-func signalNotify(interrupt chan<- os.Signal) {
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-}
-
-func handleInterrupt(interrupt chan os.Signal) {
-	once.Do(func() {
-		for range interrupt {
-			services.ServerMessage("Interrupt received shutdown plugins")
-			ShutdownPlugins()
-		}
-	})
-}
 
 // InitPlugins initialize plugins in given plugin directory
 func InitPlugins() {
@@ -145,10 +128,6 @@ func InitPlugins() {
 	if err != nil {
 		return
 	}
-
-	interrupt = make(chan os.Signal, 1)
-	signalNotify(interrupt)
-	go handleInterrupt(interrupt)
 
 }
 

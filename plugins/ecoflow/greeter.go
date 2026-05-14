@@ -50,20 +50,23 @@ func (g greeting) Version() string {
 
 // Stop stop plugin
 func (g greeting) Stop() {
-	for _, device := range adapter.DevicesConfig.EnergySources {
-		if device.Type == "ecoflow" {
-			services.ServerMessage("Reset power of %s to %02f", device.MicroConverter, float64(adapter.DefaultConfig.BaseRequest))
-			SetEcoflowPowerConsumption(device.MicroConverter, float64(adapter.DefaultConfig.BaseRequest))
+	for _, ecoDevice := range ecoflowDeviceMap {
+		services.ServerMessage("Reset power of %s to %02f", ecoDevice.converter, float64(adapter.DefaultConfig.BaseRequest))
+		if ecoDevice.serialNumber != "" {
+			ecoDevice.SetEcoflowPowerConsumption(float64(adapter.DefaultConfig.BaseRequest))
 		}
 	}
-
+	adapter.Close()
 }
 
 func (g greeting) GetPower(converter string) ([]float64, error) {
 	if converter == "" {
 		return []float64{0, 0}, nil
 	}
-	return ecoflowCurrentPowerRequest(converter), nil
+	if ecoDevice, ok := ecoflowDeviceMap[converter]; ok {
+		return ecoDevice.ecoflowCurrentPowerRequest(), nil
+	}
+	return []float64{0, 0}, nil
 }
 
 // SetPower set power to device
@@ -71,11 +74,9 @@ func (g greeting) SetPower(converter string, power float64) (float64, error) {
 	if converter == "" {
 		return 0, nil
 	}
-	for _, device := range adapter.DevicesConfig.EnergySources {
-		if device.Type == "ecoflow" {
-			services.ServerMessage("Set power of %s to %02f", converter, power)
-			return SetEcoflowPowerConsumption(converter, power)
-		}
+	if ecoDevice, ok := ecoflowDeviceMap[converter]; ok {
+		services.ServerMessage("Set power of %s to %02f", converter, power)
+		return ecoDevice.SetEcoflowPowerConsumption(power)
 	}
 	return 0, nil
 }
@@ -84,7 +85,9 @@ func (g greeting) Converter() []string {
 	converters := make([]string, 0)
 	for _, device := range adapter.DevicesConfig.EnergySources {
 		if device.Type == "ecoflow" {
-			converters = append(converters, device.MicroConverter)
+			if device.MicroConverter != "" {
+				converters = append(converters, device.MicroConverter)
+			}
 		}
 	}
 	return converters
@@ -92,11 +95,6 @@ func (g greeting) Converter() []string {
 
 func (g greeting) Register(config *energymonitor.AdapterConfig) {
 	adapter = config
-	for _, device := range config.DevicesConfig.EnergySources {
-		if device.Type == "ecoflow" {
-			services.ServerMessage("Register Ecoflow device: %s", device.MicroConverter)
-		}
-	}
 	InitEcoflow()
 }
 

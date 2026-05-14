@@ -124,21 +124,28 @@ func loopEcoflowStoreToDb(id common.RegDbID, devices *ecoflow.DeviceListResponse
 						id = energymonitor.ConnnectDatabase()
 					}
 					httpCounter++
-					status, ok := statusChange[l.SN]
+					status, ok := ecoflowDeviceMap[l.SN]
 					if !ok {
-						statusChange[l.SN] = l.Online == 1
-						status = false
+						status = &ecoflowDevice{serialNumber: l.SN, online: l.Online == 1}
+						ecoflowDeviceMap[l.SN] = status
+						status.online = false
 					}
 					if l.Online != 1 {
-						if status && !ok {
+						if status.online && !ok {
 							services.ServerMessage("'%s' device is getting offline", l.SN)
 						}
-						statusChange[l.SN] = false
+						status.online = false
 						needRefresh = true
 					} else {
-						statusChange[l.SN] = true
-						if !status {
+						if !status.online {
 							services.ServerMessage("'%s' device is getting online", l.SN)
+						}
+						status.online = true
+						if value, ok := resp["20_1.invDemandWatts"]; ok {
+							status.converterRequested = value.(float64) / 10
+						}
+						if value, ok := resp["20_1.invToOtherWatts"]; ok {
+							status.energyProviding = value.(float64) / 10
 						}
 					}
 				}
@@ -156,15 +163,13 @@ const DefaultSeconds = 60
 var httpDone = make(chan bool, 1)
 var httpCounter = uint64(0)
 
-var statusChange = make(map[string]bool)
-
 func init() {
 	ecoflow.Callback = Callback
 }
 
 func checkDeviceOnline(sn string) bool {
-	if b, ok := statusChange[sn]; ok {
-		return b
+	if b, ok := ecoflowDeviceMap[sn]; ok {
+		return b.online
 	}
 	return false
 }
