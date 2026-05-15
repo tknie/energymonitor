@@ -38,6 +38,7 @@ type defaultConfig struct {
 	UpperBatLimit           int64  `yaml:"upperBatLimit"`
 	IntermediateSize        int64  `yaml:"intermediateSize"`
 	Debug                   string `yaml:"debug"`
+	Verbose                 bool   `yaml:"verbose"`
 }
 
 type mqttConfig struct {
@@ -152,6 +153,9 @@ func evaluateConfig(file string) {
 		services.ServerMessage("Realtime request is enabled, power request will be updated if needed")
 	default:
 		services.ServerMessage("Dynamic request is disabled, power request will not be updated")
+	}
+	if adapter.DefaultConfig.Verbose {
+		PowerOutputEnabled = adapter.DefaultConfig.Verbose
 	}
 
 }
