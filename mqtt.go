@@ -31,6 +31,7 @@ var mqttDone = make(chan bool, 1)
 
 const DefaultLoopSeconds = 120
 const DefaultMaxTries = 120
+const DefaultMqttStatOutput = 300
 
 var OutLoopSeconds = DefaultLoopSeconds
 var CloseIfStuck = false
@@ -38,6 +39,7 @@ var CloseIfStuck = false
 var blockRequestTime time.Time = time.Now().Add(time.Duration(10) * time.Second)
 var currentRequested float64 = 0
 var currentDelivered float64 = 0
+var PowerOutputEnabled = false
 
 type Mapping []struct {
 	Source      string `yaml:"source"`
@@ -86,7 +88,7 @@ func LoopCounterAndCancelOutput(msgChan chan *paho.Publish, topicMap map[string]
 		case <-time.After(time.Second * time.Duration(OutLoopSeconds)):
 			if mqttCounter == lastCounter && CloseIfStuck {
 				if try > 10 {
-					services.ServerMessage("Received MQTT msgs error still stuck")
+					services.ServerMessage("Received Realtime MQTT msgs error still stuck")
 					os.Exit(10)
 				}
 				try++
@@ -95,7 +97,7 @@ func LoopCounterAndCancelOutput(msgChan chan *paho.Publish, topicMap map[string]
 			}
 			lastCounter = mqttCounter
 		}
-		if lastTime.Add(60 * time.Second).Before(time.Now()) {
+		if lastTime.Add(DefaultMqttStatOutput * time.Second).Before(time.Now()) {
 			p := message.NewPrinter(message.MatchLanguage("en"))
 			services.ServerMessage(p.Sprintf("Received realtime MQTT msgs: %4d", mqttCounter))
 			lastTime = time.Now()
@@ -155,6 +157,7 @@ func (config *AdapterConfig) ConnectMQTT(f func(chan *paho.Publish, map[string]*
 		OnClientError: func(err error) {
 			services.ServerMessage("MQTT client error: %v", err)
 			debug.PrintStack()
+			os.Exit(100)
 		},
 	})
 	pahoClient.SetDebugLogger(logger)
@@ -250,6 +253,9 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 		power, out, newRequested, currentRequested)
 
 	if power > 0 && blockRequestTime.After(time.Now()) {
+		if PowerOutputEnabled {
+			services.ServerMessage("Power: %0.2f Out: %0.2f blocked until time shift off", power, out)
+		}
 		log.Log.Debugf("Blocked until time shift or power 0")
 		refreshCurrentPowerRequest()
 		return
@@ -257,6 +263,9 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 
 	switch {
 	case out > 0:
+		if PowerOutputEnabled {
+			services.ServerMessage("Power: %0.2f Out: %0.2f power going out", power, out)
+		}
 		newRequested = float64(currentRequested) - out
 		log.Log.Infof("OUT found new requested: %f, current requested: %f",
 			newRequested, currentRequested)
@@ -270,6 +279,9 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 			adapter.DefaultConfig.IntermediateSize, newRequested, currentRequested, currentDelivered, power)
 	}
 	if newRequested > float64(adapter.DefaultConfig.UpperBatLimit) {
+		if PowerOutputEnabled {
+			services.ServerMessage("Calculate but out of limit %d: %0.2f", adapter.DefaultConfig.UpperBatLimit, newRequested)
+		}
 		newRequested = float64(adapter.DefaultConfig.UpperBatLimit)
 	}
 	log.Log.Debugf("Checking limits new requested: %f, current requested: %f, power: %f",
@@ -279,6 +291,9 @@ func (topic *Topic) processEvent(event map[string]interface{}) {
 	}
 	log.Log.Infof("Power: %f, out: %f, new requested: %f, current requested: %f, current requested: %f",
 		power, out, newRequested, currentRequested, currentDelivered)
+	if PowerOutputEnabled {
+		services.ServerMessage("Power: %0.2f Out: %0.2f request: %0.2f delivered: %0.2f", power, out, newRequested, currentDelivered)
+	}
 	p := &paho.Publish{Topic: "energymonitor/update", Payload: []byte(fmt.Sprintf("{\"status\":{\"power\": %f, \"out\": %f, \"requested\": %f}}", power, out, newRequested))}
 	ctx := context.Background()
 	topic.pahoClient.Publish(ctx, p)

@@ -51,8 +51,8 @@ func (g greeting) Version() string {
 // Stop stop plugin
 func (g greeting) Stop() {
 	for _, ecoDevice := range ecoflowDeviceMap {
-		services.ServerMessage("Reset power of %s to %02f", ecoDevice.converter, float64(adapter.DefaultConfig.BaseRequest))
-		if ecoDevice.serialNumber != "" {
+		if ecoDevice.serialNumber != "" && ecoDevice.converter {
+			services.ServerMessage("Reset power of %s to %02f", ecoDevice.serialNumber, float64(adapter.DefaultConfig.BaseRequest))
 			ecoDevice.SetEcoflowPowerConsumption(float64(adapter.DefaultConfig.BaseRequest))
 		}
 	}

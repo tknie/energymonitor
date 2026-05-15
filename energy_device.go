@@ -37,6 +37,8 @@ func SetOverallPowerConsumption(newRequested float64) {
 
 func refreshCurrentPowerRequest() {
 	currentRequested = 0
+	currentDelivered = 0
+
 	for _, p := range plugins {
 		for _, c := range p.Loader.Converter() {
 			v, err := p.Loader.GetPower(c)

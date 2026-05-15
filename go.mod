@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/stretchr/testify v1.11.1
-	github.com/tknie/ecoflow v0.0.0-20260511201737-40dced0f8c6e
+	github.com/tknie/ecoflow v0.0.0-20260514052037-81d5d41df461
 	github.com/tknie/flynn v0.10.1
 	github.com/tknie/log v0.4.0
 	golang.org/x/text v0.37.0
@@ -46,7 +46,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/tknie/marstek v0.0.0-20260505115551-99a45f0c4bc9
-	github.com/tknie/services v0.5.0
+	github.com/tknie/services v0.6.0
 	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect

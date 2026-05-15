@@ -173,7 +173,7 @@ func (ecoDevice *ecoflowDevice) SetEcoflowPowerConsumption(value float64) (float
 	client.SetEnvironmentPowerConsumption(ecoDevice.serialNumber, value)
 
 	message := fmt.Sprintf(`{"converter":"%s","current": %0.1f, "energyProviding": %0.1f, "request": %0.1f}`,
-		ecoDevice.converter, ecoDevice.currentRequested, ecoDevice.energyProviding, value)
+		ecoDevice.serialNumber, ecoDevice.currentRequested, ecoDevice.energyProviding, value)
 	energymonitor.SendMqttMessage("energymonitor/requests", message)
 
 	return value, nil

@@ -28,7 +28,6 @@ func init() {
 }
 
 func main() {
-	create := false
 	energymonitor.LoopSeconds = energymonitor.DefaultSeconds
 	seconds := os.Getenv("ENERGYMONITOR_WAIT_SECONDS")
 	if seconds != "" {
@@ -40,26 +39,14 @@ func main() {
 		}
 	}
 	statSecs := 0
-	powervalue := float64(0)
-	readFlow := false
 	flowControlFile := ""
-	flow := false
-	caracon := false
-	serialNumber := ""
-	listDevices := false
 
 	flag.IntVar(&energymonitor.LoopSeconds, "t", energymonitor.LoopSeconds, "The seconds wating between REST API queries")
 	flag.IntVar(&statSecs, "s", int(energymonitor.StatLoopMinutes), "The minutes waiting between statistics output")
 	flag.BoolVar(&energymonitor.MqttDisable, "m", false, "Disable MQTT listener")
-	flag.BoolVar(&readFlow, "r", false, "Read current flow parameter")
-	flag.BoolVar(&create, "create", false, "Create new database")
-	flag.BoolVar(&flow, "a", false, "Start energy analyze")
-	flag.BoolVar(&caracon, "c", false, "Power car AC on")
+	flag.BoolVar(&energymonitor.PowerOutputEnabled, "v", false, "Verbose output during measurement")
 	flag.BoolVar(&energymonitor.Test, "T", false, "Do tests and output only")
-	flag.BoolVar(&listDevices, "l", false, "List of Ecoflow devices")
-	flag.StringVar(&serialNumber, "S", "", "Use serial number")
 	flag.StringVar(&flowControlFile, "f", "", "Load YAML control file")
-	flag.Float64Var(&powervalue, "p", 0, "Set new power value for the power powerstream")
 
 	flag.Parse()
 
