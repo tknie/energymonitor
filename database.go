@@ -225,6 +225,9 @@ func AddTableColumns(id common.RegDbID, tn, prefix string, data map[string]inter
 	fields, value := collectKeys(data, prefix)
 	for i, k := range fields {
 		name := strings.ReplaceAll(strings.ToLower(k), ".", "_")
+		if len(name) > 63 {
+			name = name[0:63]
+		}
 		if !slices.Contains(col, name) {
 			log.Log.Debugf("Column not in table %s=%s", k, name)
 			c := CreateValueColumn(name, value[i])

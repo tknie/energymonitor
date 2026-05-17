@@ -55,6 +55,8 @@ func readEcoflowAndStoreDB() {
 			log.Log.Errorf("Error getting device parameter sn=%s: %v", l.SN, err)
 			continue
 		}
+		services.ServerMessage("Preparing device parameter sn=%s", l.SN)
+		log.Log.Debugf("Response sn=%s\n %#v", l.SN, resp)
 		// Check, create and write into table
 		energymonitor.CheckTableExists(id, table, func() []*common.Column {
 			keys := make([]string, 0, len(resp))
