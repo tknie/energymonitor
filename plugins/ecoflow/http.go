@@ -55,10 +55,19 @@ func readEcoflowAndStoreDB() {
 			log.Log.Errorf("Error getting device parameter sn=%s: %v", l.SN, err)
 			continue
 		}
+		if _, ok := resp["serial_number"]; !ok {
+			resp["serial_number"] = l.SN
+		}
+		if _, ok := resp["vendor"]; !ok {
+			resp["vendor"] = "ecoflow"
+		}
+		if _, ok := resp["timestamp"]; !ok {
+			resp["timestamp"] = time.Now()
+		}
 		services.ServerMessage("Preparing device parameter sn=%s", l.SN)
 		log.Log.Debugf("Response sn=%s\n %#v", l.SN, resp)
 		// Check, create and write into table
-		energymonitor.CheckTableExists(id, table, func() []*common.Column {
+		if energymonitor.CheckTableExists(id, table, func() []*common.Column {
 			keys := make([]string, 0, len(resp))
 			for k := range resp {
 				keys = append(keys, k)
@@ -80,7 +89,9 @@ func readEcoflowAndStoreDB() {
 				columns = append(columns, column)
 			}
 			return columns
-		})
+		}) {
+			energymonitor.AddTableColumns(mqttid, table, "eco", resp)
+		}
 	}
 
 	loopEcoflowStoreToDb(id, devices, table)
@@ -115,6 +126,9 @@ func loopEcoflowStoreToDb(id common.RegDbID, devices *ecoflow.DeviceListResponse
 					//services.ServerMessage("Get Parameter for : %s", l.SN)
 					if _, ok := resp["serial_number"]; !ok {
 						resp["serial_number"] = l.SN
+					}
+					if _, ok := resp["vendor"]; !ok {
+						resp["vendor"] = "ecoflow"
 					}
 					if _, ok := resp["timestamp"]; !ok {
 						resp["timestamp"] = time.Now()
@@ -178,7 +192,7 @@ func checkDeviceOnline(sn string) bool {
 
 func Callback(serialNumber string, data map[string]interface{}) {
 	tn := fmt.Sprintf("%s_mqtt", serialNumber)
-	if !energymonitor.CheckTableExists(mqttid, tn, func() []*common.Column {
+	if energymonitor.CheckTableExists(mqttid, tn, func() []*common.Column {
 		keys := make([]string, 0, len(data))
 		for k := range data {
 			keys = append(keys, k)

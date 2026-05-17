@@ -66,7 +66,7 @@ func deviceValueStore() {
 		})
 
 		// Check, create and write into table
-		if !energymonitor.CheckTableExists(id, table, func() []*common.Column {
+		if energymonitor.CheckTableExists(id, table, func() []*common.Column {
 			keys := generateKeys("marstek", marstekMap)
 			columns := make([]*common.Column, 0)
 			// prefix := ""

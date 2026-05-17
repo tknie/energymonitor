@@ -32,6 +32,8 @@ var dbTables []string
 var dbRef *common.Reference
 var dbPassword string
 
+var specialFields = []string{"timestamp", "vendor", "serial_number"}
+
 type storeElement struct {
 	sn     string
 	object any
@@ -132,6 +134,7 @@ func CheckTableExists(storeid common.RegDbID, tn string, generateColumns func() 
 	if tn == "" {
 		log.Log.Fatal("Error check table, database not defined")
 	}
+	readDatabaseMaps()
 	if !slices.Contains(dbTables, strings.ToLower(tn)) {
 		services.ServerMessage("Database check failed, %s need to be created", tn)
 		err := storeid.CreateTable(tn, generateColumns())
@@ -140,9 +143,9 @@ func CheckTableExists(storeid common.RegDbID, tn string, generateColumns func() 
 			log.Log.Fatal("Error creating database table: ", err)
 		}
 		readDatabaseMaps()
-		return true
+		return false
 	}
-	return false
+	return true
 }
 
 // InsertTable insert data into database
@@ -174,8 +177,13 @@ func readBatch(readid common.RegDbID, tn string, selectCmd string, f func(search
 // createValueColumn create value columns dependent of the information
 // received by HTTP request
 func CreateValueColumn(name string, v interface{}) *common.Column {
-	if strings.ToLower(name) == "timestamp" {
+	switch strings.ToLower(name) {
+	case "timestamp":
 		return &common.Column{Name: name, DataType: common.CurrentTimestamp, Length: 8}
+	case "vendor":
+		return &common.Column{Name: name, DataType: common.Alpha, Length: 255}
+	case "serial_number":
+		return &common.Column{Name: name, DataType: common.Alpha, Length: 100}
 	}
 	switch val := v.(type) {
 	case string:
@@ -254,10 +262,17 @@ func collectKeys(data map[string]interface{}, prefix string) ([]string, []any) {
 	fields := make([]string, 0)
 	columns := make([]any, 0)
 	for k, v := range data {
-		if k == "timestamp" {
+		switch k {
+		case "timestamp":
 			fields = append(fields, "timestamp")
 			columns = append(columns, v.(time.Time))
-		} else {
+		case "vendor":
+			fields = append(fields, "vendor")
+			columns = append(columns, v.(string))
+		case "serial_number":
+			fields = append(fields, "serial_number")
+			columns = append(columns, v.(string))
+		default:
 			log.Log.Debugf("Collect key: %s", prefix+"_"+k)
 			switch val := v.(type) {
 			case string:
@@ -315,7 +330,10 @@ func InsertHttpData(prefix string, data map[string]interface{}) ([]string, [][]a
 		v := data[k]
 		// prefix = strings.Split(k, ".")[0]
 		// name := "eco_" + strings.ReplaceAll(k[len(prefix)+1:], ".", "_")
-		name := prefix + "_" + strings.ReplaceAll(k, ".", "_")
+		name := strings.ReplaceAll(k, ".", "_")
+		if !slices.Contains(specialFields, name) {
+			name = prefix + "_" + name
+		}
 		fields = append(fields, name)
 		switch val := v.(type) {
 		case string:
